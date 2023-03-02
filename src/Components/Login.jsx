@@ -1,36 +1,47 @@
 import React, { useRef, useState } from 'react'
 import axios from 'axios'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import HashLoader from "react-spinners/HashLoader";
 import useAuth from '../hooks/useAuth'
 
 function Login() {
     const [statusMsg, setStatusMSg] = useState('')
+    let [loading, setLoading] = useState(false);
 
     const phoneNumRef = useRef()
     const passwordRef = useRef()
 
-    const { auth, setAuth, API_URL } = useAuth()
+    const { auth, setAuth, API_URL, isLoggedIn, setIsLoggedIn } = useAuth()
     console.log(auth, setAuth)
+
+    const navigate = useNavigate()
 
 
     const submitBtnFunc = (e) => {
         e.preventDefault()
-        console.log(phoneNumRef.current)
-        console.log(passwordRef.current)
+        console.log(phoneNumRef.current.value)
+        console.log(passwordRef.current.value)
+        setLoading(true)
 
         let userData = {
-            phone: parseInt(''),
-            password: ''
+            phone: parseInt(phoneNumRef.current.value),
+            password: passwordRef.current.value
         }
 
         let url = API_URL + '/login'
         axios.post(url, userData
         ).then((res) => {
+            setLoading(false)
             setStatusMSg('Login Successful')
-            console.log(res)
+            setIsLoggedIn(true)
+            navigate('/main/items')
+            console.log(res.data)
+            setAuth(res)
         }).catch(
             (err) => {
+                setLoading(false)
                 setStatusMSg('Login Failed')
+                navigate('/access')
                 console.log(err)
             }
         )
@@ -39,10 +50,19 @@ function Login() {
     return (
         <div className="container">
             <div className="row">
-                {auth}
+                {/* {auth} */}
                 <div className="col-md-6 offset-md-3">
                     <h1>Login</h1>
-                    {statusMsg}
+                    <div className='h-50 w-25 m-auto'>
+                        {loading ?
+                            <HashLoader
+                                loading={loading}
+                                size={150}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                            /> : statusMsg
+                        }
+                    </div>
                     <form>
                         <div className="mb-3">
                             <input ref={phoneNumRef} type="number" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder='Phone Number' />
